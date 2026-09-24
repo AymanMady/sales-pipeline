@@ -1,0 +1,29 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Local config: secrets and machine-specific ports live here, never in git
+.env
+.env.local
+
+# Generated data: reproducible with `make data && make run`
+data/raw/*.csv
+reports/*.csv
+
+# The report and its chart stay versioned: they are the project's output.
+
+# Personal notes, not part of the project
+LEARNING.md
+
+# OS / editors
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

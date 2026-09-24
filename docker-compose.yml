@@ -1,0 +1,32 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: sales_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-sales}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-sales}
+      POSTGRES_DB: ${POSTGRES_DB:-sales}
+    ports:
+      # 5433 avoids clashing with a PostgreSQL already installed on the host
+      - "${POSTGRES_PORT:-5433}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-sales} -d ${POSTGRES_DB:-sales}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  adminer:
+    image: adminer:4
+    container_name: sales_adminer
+    restart: unless-stopped
+    ports:
+      - "${ADMINER_PORT:-8081}:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  pgdata:

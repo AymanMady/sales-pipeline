@@ -1,0 +1,81 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint-and-test:
+    name: Lint and unit tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements-dev.txt
+
+      - name: Lint
+        run: ruff check .
+
+      - name: Unit tests
+        run: pytest
+
+  pipeline:
+    name: End-to-end pipeline
+    runs-on: ubuntu-latest
+
+    # The real PostgreSQL the pipeline loads into. Mapped to 5433 to match
+    # the port the project uses everywhere else.
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: sales
+          POSTGRES_PASSWORD: sales
+          POSTGRES_DB: sales
+        ports:
+          - 5433:5432
+        options: >-
+          --health-cmd "pg_isready -U sales -d sales"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      POSTGRES_USER: sales
+      POSTGRES_PASSWORD: sales
+      POSTGRES_DB: sales
+      POSTGRES_HOST: localhost
+      POSTGRES_PORT: 5433
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Generate the raw CSV files
+        run: python scripts/generate_raw_data.py
+
+      # Exits non-zero if a row count is off or an orphan row got through,
+      # so a broken pipeline fails the build instead of shipping a wrong report.
+      - name: Run the pipeline
+        run: python -m src.pipeline
+
+      - name: Upload the generated report
+        uses: actions/upload-artifact@v4
+        with:
+          name: sales-report
+          path: reports/
