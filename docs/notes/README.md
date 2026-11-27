@@ -8,3 +8,4 @@ applying) in this project. Each note is self-contained.
 - [Late-arriving data](late-arriving-data.md) — event time, watermarks and corrections
 - [Upserts](upserts.md) — insert new rows and update existing ones in one statement
 - [Data lineage](data-lineage.md) — knowing where each dataset comes from and what it feeds
+- [Table grain](table-grain.md) — declare what one row means before writing any SQL
